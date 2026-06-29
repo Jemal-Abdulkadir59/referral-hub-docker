@@ -1,0 +1,44 @@
+
+services:
+  backend:
+    build: ./referral-hub-backend
+    container_name: hospital-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./referral-hub-backend/config.env
+    environment:
+      - NODE_ENV=docker
+    depends_on:
+      - mongodb
+  
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: test1234
+    volumes:
+      - mongo-data:/data/db
+  
+  frontend:
+    build:
+      context: ./referral-hub-frontend
+      args:
+        # Pass the URLs here so the Materio build script can bake them into the JavaScript files!
+        - NEXT_PUBLIC_SERVER_API_URL=http://backend:8000
+        - NEXT_PUBLIC_CLIENT_API_URL=http://localhost:8000
+        - NEXT_PUBLIC_DOCS_URL=https://demos.themeselection.com/materio-mui-nextjs-admin-template/documentation
+        - NEXT_PUBLIC_PRO_URL=https://demos.themeselection.com/materio-mui-nextjs-admin-template/demo-1
+        - NEXT_PUBLIC_REPO_NAME=materio-mui-nextjs-admin-template-free
+    container_name: hospital-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    
+volumes:
+  mongo-data:

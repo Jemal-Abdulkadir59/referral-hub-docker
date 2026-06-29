@@ -1,0 +1,12 @@
+node_modules
+Dockerfile
+note.txt
+npm-debug.log
+.gitignore
+.dockerignore
+.env.example
+.env.local
+.next
+.git
+# allow env for build
+# !.env.local

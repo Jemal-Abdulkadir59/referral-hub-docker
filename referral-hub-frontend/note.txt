@@ -1,0 +1,363 @@
+Module not found: Can't resolve '@assets/iconify-icons/generated-icons.css'
+   6 |
+   7 | // Generated Icon CSS Imports
+>  8 | import '@assets/iconify-icons/generated-icons.css'
+     | ^
+
+inside tsx src/assets/iconify-icons/bundle-icons-css.js
+
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+npm run build:icons
+This should now generate:
+src/assets/iconify-icons/generated-icons.css
+And eliminate the module-not-found error in layout.jsx.
+
+#
+Search your codebase for all <Link> usages
+
+Run in your project folder:
+
+bash
+Copy
+Edit
+rg "<Link" src/
+(or grep -r "<Link" src/ if you don’t have ripgrep)
+
+Look at each one — verify that the href prop is always present and valid.
+
+#TO FIX LINK ERROR I USED 
+grep -r "<Link" src/
+solitions
+    <Link>Request Permission</Link>  ❌ Missing `href`
+    <Link href="/notification-settings">Request Permission</Link>  ✅
+    <Link>  ❌ Missing `href`
+    <Link href="/">  ✅
+    Additional Issues to Check
+Empty href="#" in Register.jsx
+
+jsx
+<Link href='#' className='flex justify-center items-start mbe-6'>  ❌ Avoid `#`
+Better:
+
+jsx
+<Link href="/" className='flex justify-center items-start mbe-6'>  ✅
+(Using # causes unnecessary page jumps. Prefer a real path like / or javascript:void(0) if no navigation is needed.)
+
+Dynamic href in FooterContent.jsx
+
+jsx
+<Link href={process.env.NEXT_PUBLIC_DOCS_URL} target='_blank'>  ⚠️ Check if env var exists
+Safer:
+
+jsx
+<Link href={process.env.NEXT_PUBLIC_DOCS_URL || 'https://default-docs-url.com'} target='_blank'>  ✅
+(Ensures href is never undefined even if the env var is missing.)
+
+Final Recommendations
+Always validate href:
+Use href={someValue || "/fallback"} if the path is dynamic.
+
+Avoid href="#":
+It causes page jumps. Use href="/" or onClick handlers if needed.
+
+ESLint Rule:
+Add jsx-no-undef-href to catch missing href in <Link> tags.
+
+
+######################################
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import LoadingScreen from '@/app/login/loading'
+
+const withAuth = (Component, allowedRoles = []) => {
+  const AuthWrapper = props => {
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+      const token = localStorage.getItem('jwt')
+      const role = localStorage.getItem('role')
+
+      if (!token || !role) {
+        router.push('/login')
+        return
+      }
+
+      if (!allowedRoles.includes(role)) {
+        router.push('/unauthorized')
+        return
+      }
+
+      setLoading(false)
+    }, [router])
+
+    if (loading) {
+      return <LoadingScreen />
+    }
+
+    return <Component {...props} />
+  }
+
+  return AuthWrapper
+}
+
+export default withAuth
+
+***************************************************************************
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { jwtDecode } from 'jwt-decode'
+import axios from '@/libs/axios'
+import LoadingScreen from '@/app/login/loading'
+
+const withAuth = (Component, allowedRoles = []) => {
+  const AuthWrapper = props => {
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+      const token = localStorage.getItem('jwt')
+
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
+      try {
+        const decoded = jwtDecode(token)
+        const userId = decoded.id
+        console.log(userId)
+        axios
+          .get(`/users/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            withCredentials: true
+          })
+          .then(res => {
+            const user = res?.data.data.data
+            if (!allowedRoles.includes(user.role)) {
+              router.push('/unauthorized')
+            } else {
+              setLoading(false)
+            }
+          })
+          .catch(() => {
+            router.push('/login')
+          })
+      } catch (error) {
+        router.push('/login')
+      }
+    }, [])
+
+    if (loading) return <LoadingScreen />
+
+    return <Component {...props} />
+  }
+
+  return AuthWrapper
+}
+
+export default withAuth
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+//config git  (Local git installation) on cmd
+#set
+git config --global user.name "jemal abdulkadir"
+git config --global user.email "jemal.mana59@gmail.com"
+
+#remove email and name seted in git
+ git config --global --unset user.name
+ git config --global --unset user.email
+ git config --global --list
+
+#git
+--initialized empty git repository 
+git init 
+
+--git ignore file we don't want in repository
+create .gitignore in root folder
+
+--to see modified file
+git status
+
+why we need add stageing if you want add diffrent file for diffrent commit imagin you change file but only commit 5 of them so by staging you can do 
+--To commit one add into called staged area and then commit all the file to new commit
+git add -A
+--commit and the message discriptive of the changes that you did. we saved all the modification to repository
+git commit -m "Initial commit"
+
+--if modified
+git add note.txt
+
+--check status
+git status
+
+--commit
+git commit -m "added comment"
+
+---------------------------------------------------------------------
+Docker 
+
+Why NOT 127.0.0.1 or backend?
+❌ 127.0.0.1
+Works locally
+Breaks in production (wrong domain)
+❌ backend
+Works inside Docker containers
+❌ Browser cannot resolve it
+
+🧠 Important Rule (MEMORIZE)
+Where request runs	Use
+Browser (React Query with axios)	http://localhost:8000
+Because React Query + Axios runs in the browser, not inside Docker.
+
+Docker internal	http://backend:8000
+Production (ECS)	https://api.yourdomain.com
+
+🔹 4. Docker Compose Impact
+Even if your backend is:
+
+backend:
+  ports:
+    - "8000:8000"
+
+👉 Browser accesses it via:
+
+http://localhost:8000 ✅
+
+
+🔹 5. When You Move to AWS ECS
+
+Change ONLY env:
+
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+
+👉 No code changes needed ✅
+
+libs/axios.js 
+NEXT_PUBLIC_APP_URL=http://localhost:3000${BASEPATH}
+to
+NEXT_PUBLIC_API_URL=http://localhost:8000
+-------------------------------------------------------------
+env
+
+✅ Solution 1 (Simple – Keep .env.local)
+
+Make sure:
+
+1. .dockerignore allows it
+!.env.local
+2. Dockerfile copies it BEFORE build
+COPY . .
+RUN npm run build
+
+👉 This works because .env.local is inside container at build time
+
+✅ Solution 2 (Professional – Recommended)
+
+Use build args
+
+docker-compose.yml
+frontend:
+  build:
+    context: ./frontend
+    args:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+👉 This passes value into Docker build 
+
+Dockerfile
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+👉 This makes Next.js see it during build
+
+RUN npm run build
+🧠 Why professionals use this
+Works in CI/CD
+Works in ECS
+No dependency on .env.local
+Clear separation of build/runtime
+🎯 Simple Explanation (Think like this)
+
+👉 env_file = “give env AFTER app is built”
+👉 ARG = “give env WHILE building app”
+
+👉 Next.js needs env while building
+
+🧪 Real Example
+
+If you log inside frontend:
+
+console.log(process.env.NEXT_PUBLIC_API_URL)
+With env_file only:
+undefined ❌
+With ARG:
+http://localhost:8000 ✅
+🚀 What should YOU do now?
+
+Since you're learning DevOps:
+
+👉 I recommend:
+
+✅ Use build args (ARG)
+❌ Don’t rely only on env_file
+
+🏁 Final Answer
+
+👉 Why use:
+
+ARG ...
+ENV ...
+
+Because:
+
+✅ Next.js needs env at build time
+❌ env_file gives env at runtime only
+
+Build runs only when:
+You change code
+Or run docker-compose build
+-----------------------------------------
+.env
+JWT_SECRET=my-hospital-secure-and-ultra-long-code
+
+--------------------------------------------------
+🏗️ Recommended Structure (Professional)
+project-root/
+│
+├── docker-compose.yml
+├── .env                # (optional global - docker only)
+│
+├── backend/
+│   ├── Dockerfile
+│   ├── config.env     # backend env
+│   └── ...
+│
+├── frontend/
+│   ├── Dockerfile
+│   ├── .env.local     # frontend env
+│   ├── .env.example
+│   └── ...
