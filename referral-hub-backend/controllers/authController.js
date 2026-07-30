@@ -1,10 +1,12 @@
 const crypto = require('crypto');
 const { promisify } = require('util');
-const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const jwt = require('jsonwebtoken');
 const AppError = require('./../utils/appError');
 const Email = require('./../utils/email');
+
+const prisma = require('../prismaClient');
+const bcrypt = require('bcryptjs');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -13,25 +15,23 @@ const signToken = (id) => {
 };
 
 const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
+  const token = signToken(user.id);
 
-const cookieOptions = {
-  expires: new Date(
-    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-  ),
-  httpOnly: true,
-  sameSite: 'lax',   // 🔥 required for cross-origin
-  secure: false,      // 🔥 required for localhost
-};
-
-
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true,
+    sameSite: 'lax', // 🔥 required for cross-origin
+    secure: false, // 🔥 required for localhost
+  };
 
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
   // remove password from output
-  user.password = undefined;
+  user.password = null;
 
   res.status(statusCode).json({
     status: 'success',
@@ -44,21 +44,24 @@ const cookieOptions = {
 
 // SIGNUP
 exports.signup = catchAsync(async (req, res, next) => {
-  const newUser = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-    role: req.body.role,
-    department: req.body.department,
-    address: req.body.address,
-    phone: req.body.phone,
-    status: req.body.status,
+  if (req.body.password !== req.body.passwordConfirm) {
+    return next(new AppError('Passwords do not match', 400));
+  }
+
+  const hashedPassword = await bcrypt.hash(req.body.password, 12);
+
+  const newUser = await prisma.user.create({
+    data: {
+      name: req.body.name,
+      email: req.body.email,
+      password: hashedPassword,
+      phone: req.body.phone,
+      address: req.body.address,
+      role: req.body.role ?? 'user',
+      status: req.body.status ?? 'pending',
+    },
   });
 
-  const url = `${req.protocol}://${req.get('host')}/me`;
-
-  await new Email(newUser, url).sendWelcome();
   createSendToken(newUser, 201, res);
 });
 
@@ -72,9 +75,17 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 2) Check if user exist
-  const user = await User.findOne({ email }).select('+password');
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
-  if (!user || !(await user.correctPassword(password, user.password))) {
+  if (!user) {
+    return next(new AppError('Incorrect email or password', 401));
+  }
+
+  const correct = await bcrypt.compare(password, user.password);
+
+  if (!correct) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
@@ -105,7 +116,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401),
+      new AppError('You are not logged in! Please log in to get access.', 401), //appError ?
     );
   }
 
@@ -113,7 +124,9 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   // 3) Check if user still exist
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await prisma.user.findUnique({
+    where: { id: decoded.id },
+  });
 
   if (!currentUser) {
     return next(
@@ -125,10 +138,23 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 4)Check if user changed password after the token was issued
-  if (currentUser.changedpasswordAfter(decoded.iat)) {
-    return next(
-      new AppError('User recently changed password! Please log in again.', 401),
+  const JWTTimestamp = decoded.iat;
+
+  if (currentUser.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      currentUser.passwordChangedAt.getTime() / 1000,
+      10,
     );
+    // console.log(changedTimestamp, JWTTimestamp);
+
+    if (JWTTimestamp < changedTimestamp) {
+      return next(
+        new AppError(
+          'User recently changed password! Please log in again.',
+          401,
+        ),
+      );
+    }
   }
 
   // GRANT ACCESS TO PROTECTED ROUTE
@@ -148,14 +174,25 @@ exports.isLoggedIn = async (req, res, next) => {
       );
 
       // 3) Check if user still exist
-      const currentUser = await User.findById(decoded.id);
+      const currentUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+      });
+
       if (!currentUser) {
         return next();
       }
 
       // 4)Check if user changed password after the token was issued
-      if (currentUser.changedpasswordAfter(decoded.iat)) {
-        return next();
+      const JWTTimestamp = decoded.iat;
+
+      if (currentUser.passwordChangedAt) {
+        const changedTimestamp = parseInt(
+          currentUser.passwordChangedAt.getTime() / 1000,
+          10,
+        );
+        // console.log(changedTimestamp, JWTTimestamp);
+
+        if (JWTTimestamp < changedTimestamp) return next();
       }
 
       // THERE IS A LOGGED IN USER
@@ -185,20 +222,36 @@ exports.restrictTo = (...roles) => {
 
 // FORGOT PASSWORD
 exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
   // 1. Get user based on POSTed email
-  const user = await User.findOne({ email: req.body.email });
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
   if (!user) {
     return next(new AppError('There is no user with email address.', 404));
   }
 
   // 2. Generate the random reset token
-  const resetToken = user.createPasswordResetToken();
-  await user.save({ validateBeforeSave: false });
+  const restToken = crypto.randomBytes(32).toString('hex');
+
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(restToken)
+    .digest('hex');
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: new Date(Date.now() + 10 * 60 * 1000),
+    },
+  });
 
   // 3. send it to user's email
   try {
-    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${restToken}`;
     await new Email(user, resetURL).sendPasswordReset();
 
     res.status(200).json({
@@ -206,9 +259,14 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       message: 'Token sent to email',
     });
   } catch (err) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save({ validateBeforeSave: false });
+    // await user.save({ validateBeforeSave: false });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    });
 
     return next(
       new AppError(
@@ -226,9 +284,17 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     .update(req.params.token)
     .digest('hex');
 
-  const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
+  //   const user = await User.findOne({
+  //     passwordResetToken: hashedToken,
+  //     passwordResetExpires: { $gt: Date.now() },
+  //   });
+  const user = await prisma.user.findFirst({
+    where: {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: {
+        gt: new Date(),
+      },
+    },
   });
 
   // 2. If the token has not expired, and there is user, set the new password
@@ -236,32 +302,52 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Token is invalid or has expired', 400));
   }
 
-  user.password = req.body.password;
-  user.passwordConfirm = req.body.passwordConfirm;
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
+  const hashedPassword = await bcrypt.hash(req.body.password, 12);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+    },
+  });
 
   // 3. Update changedPasswordAt Property for the user
   createSendToken(user, 200, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
+  const { passwordCurrent } = req.body;
   // 1.Get user form collection
-  const user = await User.findById(req.user.id).select('+password');
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+  });
+
+  const { password, ...userSafe } = user;
 
   //2.Check if POSTed current password is correct
-  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+  const correct = await bcrypt.compare(passwordCurrent, password);
+
+  if (!correct) {
     return next(new AppError('Your current password is wrong', 401));
   }
 
+  const newPassword = await bcrypt.hash(req.body.password, 12);
+
   //3.If so update password
-  user.password = req.body.password;
-  user.passwordConfirm = req.body.passwordConfirm;
-  await user.save();
+  //   user.password = newPassword;
+
+  const updatedUser = await prisma.user.update({
+    where: { id: req.user.id },
+    data: {
+      password: newPassword,
+      passwordChangedAt: new Date(),
+    },
+  });
 
   // user.findByIdAndUpdate  WILL NOT WORK AS INTENDED!
 
   //4.log user in, send JWT
-  createSendToken(user, 200, res);
+  createSendToken(updatedUser, 200, res);
 });

@@ -118,7 +118,7 @@ export default function PatientRecordTable() {
 
   const handleDelete = () => {
     // setUsers(users.filter(u => u.id !== userToDelete?.id))
-    deletePatientRecords(userToDelete?._id)
+    deletePatientRecords(userToDelete?.id)
     setOpenConfirm(false)
     setUserToDelete(null)
   }
@@ -184,7 +184,7 @@ export default function PatientRecordTable() {
           </TableHead>
           <TableBody>
             {paginatedUsers?.map(patientRecord => (
-              <TableRow key={patientRecord._id} hover>
+              <TableRow key={patientRecord.id} hover>
                 <TableCell>
                   <Avatar src={patientRecord.referral.patient.photo} />
                 </TableCell>
@@ -198,7 +198,7 @@ export default function PatientRecordTable() {
                   <IconButton
                     color='primary'
                     onClick={() => {
-                      setpatientRecordId(patientRecord._id)
+                      setpatientRecordId(patientRecord.id)
                       setOpenPatientRecord(true)
                     }}
                   >
@@ -209,7 +209,7 @@ export default function PatientRecordTable() {
                     <IconButton
                       color='warning'
                       onClick={() => {
-                        setpatientRecordId(patientRecord._id)
+                        setpatientRecordId(patientRecord.id)
                         setOpenEdit(true)
                       }}
                     >
@@ -232,7 +232,7 @@ export default function PatientRecordTable() {
                       color='success'
                       onClick={() => {
                         setOpentDoctorReport(true)
-                        setpatientRecordId(patientRecord._id)
+                        setpatientRecordId(patientRecord.id)
                       }}
                     >
                       <NoteAddIcon />

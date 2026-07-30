@@ -1,24 +1,31 @@
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
-const APIFeatures = require('./../utils/apiFeatures');
+const mapRelations = require('./../utils/mapRelations');
 
-exports.createOne = (Model) =>
+exports.createOne = (model, modelName) =>
   catchAsync(async (req, res, next) => {
-    const doc = await Model.create(req.body);
+    const data = mapRelations(modelName, req.body);
+
+    // console.log('BODY:', JSON.stringify(data, null, 2));
+
+    const doc = await model.create({
+      data,
+    });
 
     res.status(201).json({
       status: 'success',
-      data: {
-        data: doc,
-      },
+      data: { data: doc },
     });
   });
 
-exports.getOne = (Model, popOptions) =>
+exports.getOne = (model, options = {}) =>
   catchAsync(async (req, res, next) => {
-    let query = Model.findById(req.params.id);
-    if (popOptions) query = query.populate(popOptions);
-    const doc = await query;
+    const { include } = options;
+
+    const doc = await model.findUnique({
+      where: { id: req.params.id },
+      include, // ✅ THIS is missing
+    });
 
     if (!doc) {
       return next(new AppError('No document found with that ID', 404));
@@ -26,19 +33,15 @@ exports.getOne = (Model, popOptions) =>
 
     res.status(200).json({
       status: 'success',
-      data: {
-        data: doc,
-      },
+      data: { data: doc },
     });
   });
 
-exports.deleteOne = (Model) =>
+exports.deleteOne = (model) =>
   catchAsync(async (req, res, next) => {
-    const doc = await Model.findByIdAndDelete(req.params.id);
-
-    if (!doc) {
-      return next(new AppError('No document found with that ID', 404));
-    }
+    const doc = await model.delete({
+      where: { id: req.params.id },
+    });
 
     res.status(204).json({
       status: 'success',
@@ -46,58 +49,103 @@ exports.deleteOne = (Model) =>
     });
   });
 
-exports.updateOne = (Model) =>
+exports.updateOne = (model) =>
   catchAsync(async (req, res, next) => {
-    if (req.body.password || req.body.passwordConfirm) {
+    if (!req.params.id) {
+      return next(new AppError('ID is required in URL', 400));
+    }
+
+    if (req.body.password) {
       return next(
-        new AppError(
-          'This route is not for password update. Please use /updateMyPassword ',
-          400,
-        ),
+        new AppError('Use /updateMyPassword for password updates', 400),
       );
     }
 
-    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
+    const doc = await model.update({
+      where: { id: req.params.id },
+      data: req.body,
     });
-
-    if (!doc) {
-      return next(new AppError('No document found with that ID', 404));
-    }
 
     res.status(200).json({
       status: 'success',
-      data: {
-        data: doc,
-      },
+      data: { data: doc },
     });
   });
 
-exports.getAll = (Model) =>
+exports.getAll = (model, options = {}) =>
   catchAsync(async (req, res, next) => {
-    //TO ALLOW FOR NESTED GET FLYERS ON RETAILER (HACK)
-    let filter = {};
-    if (req.params.userId) filter = { clinic: req.params.userId };
-    if (req.params.doctorId) filter = { doctor: req.params.doctorId };
+    const { include } = options;
 
-    // EXCUTE QUERY
-    const features = new APIFeatures(Model.find(filter), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate()
-      .search();
+    // 1️⃣ FILTERING
+    const queryObj = { ...req.query };
+    const excludedFields = ['sort', 'page', 'limit', 'fields', 'search'];
+    excludedFields.forEach((el) => delete queryObj[el]);
 
-    const doc = await features.query;
-    // const doc = await features.query.explain();
+    let where = {};
 
-    // SEND RESPONSE
+    // basic filtering (exact match)
+    Object.keys(queryObj).forEach((key) => {
+      where[key] = queryObj[key];
+    });
+
+    // 2️⃣ ADVANCED FILTER (gte, lte, etc.)
+    if (req.query.price_gte) {
+      where.price = { gte: Number(req.query.price_gte) };
+    }
+
+    if (req.query.price_lte) {
+      where.price = { lte: Number(req.query.price_lte) };
+    }
+
+    // 3️⃣ SEARCH (like Mongo regex)
+    if (req.query.search) {
+      where.name = {
+        contains: req.query.search,
+        mode: 'insensitive',
+      };
+    }
+
+    // 4️⃣ SORT
+    let orderBy;
+
+    if (req.query.sort) {
+      const sortField = req.query.sort.replace('-', '');
+      orderBy = {
+        [sortField]: req.query.sort.startsWith('-') ? 'desc' : 'asc',
+      };
+    } else {
+      // fallback safely
+      orderBy = { id: 'desc' }; // ✅ every model has id
+    }
+
+    // 5️⃣ PAGINATION
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 100;
+    const skip = (page - 1) * limit;
+
+    // 6️⃣ FIELD SELECTION
+    let select = undefined;
+
+    if (req.query.fields) {
+      select = {};
+      req.query.fields.split(',').forEach((field) => {
+        select[field] = true;
+      });
+    }
+
+    // 7️⃣ FINAL QUERY
+    const docs = await model.findMany({
+      where,
+      orderBy,
+      skip,
+      take: limit,
+      select,
+      include, // ✅ THIS is missing
+    });
+
     res.status(200).json({
       status: 'success',
-      results: doc.length,
-      data: {
-        data: doc,
-      },
+      results: docs.length,
+      data: { data: docs },
     });
   });

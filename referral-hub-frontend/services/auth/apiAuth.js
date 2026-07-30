@@ -14,7 +14,7 @@ export async function apiLogin({ email, password }) {
       const token = res?.data?.token
       localStorage.setItem('jwt', token)
       localStorage.setItem('role', res.data.data.user.role)
-      localStorage.setItem('userID', res.data.data.user._id)
+      localStorage.setItem('userID', res.data.data.user.id)
       localStorage.setItem('isActive', res.data.data.user.status)
     }
 

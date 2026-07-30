@@ -113,7 +113,7 @@ export default function PatientsTableWithFeatures() {
 
   const handleDelete = () => {
     // setUsers(users.filter(u => u.id !== userToDelete?.id))
-    deletePatients(userToDelete._id)
+    deletePatients(userToDelete.id)
     setOpenConfirm(false)
     setUserToDelete(null)
   }
@@ -175,7 +175,7 @@ export default function PatientsTableWithFeatures() {
           </TableHead>
           <TableBody>
             {paginatedUsers?.map(user => (
-              <TableRow key={user._id} hover>
+              <TableRow key={user.id} hover>
                 <TableCell>
                   <Avatar src={`/images/${user.photo}`} />
                 </TableCell>
@@ -189,12 +189,12 @@ export default function PatientsTableWithFeatures() {
                     color='primary'
                     onClick={() => {
                       setOpenView(true)
-                      setSelectedId(user._id)
+                      setSelectedId(user.id)
                     }}
                   >
                     <ViewIcon />
                   </IconButton>
-                  <IconButton color='warning' onClick={() => handleEdit(user._id)}>
+                  <IconButton color='warning' onClick={() => handleEdit(user.id)}>
                     <EditIcon />
                   </IconButton>
                   <IconButton
@@ -209,7 +209,7 @@ export default function PatientsTableWithFeatures() {
                   <IconButton>
                     <SendIcon
                       onClick={() => {
-                        setSelectedId(user._id)
+                        setSelectedId(user.id)
                         setOpenCreateRef(true)
                       }}
                     />

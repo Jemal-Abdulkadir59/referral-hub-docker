@@ -172,3 +172,153 @@ http://localhost:3000
 👉 Test backend:
 http://localhost:8000/api/v1
 🧠 Pro tip (Debugging)
+
+-----------------------------------------------------------------------------------------
+Prisma 
+
+Install Prisma:
+npm uninstall mongoose
+npm install prisma @prisma/client
+npx prisma init
+
+------------------------------------------------------------------------------------
+TO FIX user tabel inside int -> String then i want to reset table prisma then
+✅ FINAL FIX (DO THIS EXACTLY)
+🔴 Step 1 — DELETE old migrations
+In your project:
+rm -rf prisma/migrations
+
+(Windows PowerShell alternative)
+Remove-Item -Recurse -Force prisma/migrations
+
+Step 2 — Make sure schema is correct
+id String @id @default(uuid())
+
+
+Step 3 — Recreate migration
+docker ps
+docker exec -it hospital-backend npx prisma migrate dev --name init
+
+Step 4 — Restart everything
+docker-compose down -v
+docker-compose up --build
+
+Step 5 — Verify in DB
+docker exec -it postgres psql -U postgres
+postgres=# \l
+postgres=# \c referral_db
+
+-----------------------------------------------------------------
+
+✅ FIX (DO THIS EXACTLY)
+🔴 Step 1 — Make sure containers are running
+docker ps
+
+You MUST see:
+
+hospital-backend
+postgres
+🔴 Step 2 — Run migration INSIDE container
+docker exec -it hospital-backend npx prisma migrate dev --name init
+
+🔴 Step 3 — If error persists → force reset
+docker exec -it hospital-backend npx prisma migrate reset
+
+Type:
+yes
+
+🔴 Step 4 — Verify tables exist
+docker exec -it postgres psql -U postgres -d referral_db
+
+Then:
+
+\dt
+
+👉 You should see:
+
+User
+Patient
+Referral
+...
+🔴 Step 5 — Check structure
+\d "User"
+
+continue reading...
+----------------------------------------------------------------------
+👉 DO NOT put (prisma migrate dev) inside your Dockerfile
+👉 Instead, use prisma migrate deploy at container startup
+
+🧠 WHY NOT IN DOCKERFILE?
+
+Your Dockerfile is for building the image, not running DB changes.
+
+Command	Purpose	Where
+prisma generate	build client	✅ Dockerfile
+prisma migrate dev	development only	❌ NEVER in Dockerfile
+prisma migrate deploy	production migrations	✅ container startup
+
+✅ BEST PRACTICE (WHAT YOU SHOULD DO)
+🔥 Option 1 — Modify CMD (Simple & Clean)
+
+Update your Dockerfile like this:
+
+# Start app + run migrations
+CMD sh -c "npx prisma migrate deploy && node server.js"
+
+🚀 WHAT THIS DOES
+
+Every time container starts:
+
+✅ Connects to DB
+✅ Applies pending migrations
+✅ Starts your server
+
+⚠️ IMPORTANT NOTES
+❌ Don’t use this in Docker:
+npx prisma migrate dev
+
+👉 Because:
+
+It creates new migrations
+It prompts for input
+Not production safe
+✅ Use this instead:
+npx prisma migrate deploy
+
+👉 Because:
+
+Applies existing migrations
+No prompts
+Production safe
+
+-------------------------------------------
+ if (modelName === 'Referral') {
+    data.clinic = { connect: { id: body.clinicId } };
+    data.patient = { connect: { id: body.patient } };
+
+    delete data.clinicId;
+    delete data.patientId;
+  }
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+mapRelations
+
+BODY: {
+  "reason": "health",
+   "description": "dess",
+   "patient": {
+     "connect": {
+       "id": "92e19af9-a4a6-4bd3-b1bf-6269eb825645"
+     }
+   },
+   "clinic": {
+     "connect": {
+       "id": "c1b3d79e-2488-4e99-bdda-0aa8234369d0"
+     }
+   }
+ }
+
+ note:
+ "id": "92e19af9-a4a6-4bd3-b1bf-6269eb825645"  -> references: [id]

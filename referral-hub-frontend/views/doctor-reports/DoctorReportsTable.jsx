@@ -108,7 +108,7 @@ export default function DoctorReportsTable() {
   const handleDelete = () => {
     // setUsers(users.filter(u => u.id !== userToDelete?.id))
 
-    deleteDoctorReports(userToDelete?._id)
+    deleteDoctorReports(userToDelete?.id)
     setOpenConfirm(false)
     setUserToDelete(null)
   }
@@ -172,7 +172,7 @@ export default function DoctorReportsTable() {
           </TableHead>
           <TableBody>
             {paginatedUsers?.map(doctorReport => (
-              <TableRow key={doctorReport._id} hover>
+              <TableRow key={doctorReport.id} hover>
                 <TableCell>
                   <Avatar src={`/images/${doctorReport.patientRecord.referral.patient.photo}`} />
                 </TableCell>
@@ -186,24 +186,24 @@ export default function DoctorReportsTable() {
                     color='primary'
                     onClick={() => {
                       setOpenView(true)
-                      setDoctorReportId(doctorReport._id)
+                      setDoctorReportId(doctorReport.id)
                     }}
                   >
                     <ViewIcon />
                   </IconButton>
 
-                  {userId === doctorReport.doctor._id && (
+                  {userId === doctorReport.doctor.id && (
                     <IconButton
                       color='warning'
                       onClick={() => {
                         setOpentDoctorReport(true)
-                        setDoctorReportId(doctorReport._id)
+                        setDoctorReportId(doctorReport.id)
                       }}
                     >
                       <EditIcon />
                     </IconButton>
                   )}
-                  {userId === doctorReport.doctor._id && (
+                  {userId === doctorReport.doctor.id && (
                     <IconButton
                       color='error'
                       onClick={() => {

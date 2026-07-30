@@ -106,7 +106,7 @@ export default function UserTableWithFeatures() {
 
   const handleDelete = () => {
     // setUsers(users.filter(u => u.id !== userToDelete?.id))
-    deleteUsers(userToDelete?._id)
+    deleteUsers(userToDelete?.id)
     setOpenConfirm(false)
     setUserToDelete(null)
   }
@@ -190,7 +190,7 @@ export default function UserTableWithFeatures() {
           </TableHead>
           <TableBody>
             {paginatedUsers.map(user => (
-              <TableRow key={user._id} hover>
+              <TableRow key={user.id} hover>
                 <TableCell>
                   <Avatar src={`/images/${user.photo}`} />
                 </TableCell>
@@ -211,7 +211,7 @@ export default function UserTableWithFeatures() {
                   {/* <IconButton color='primary'>
                     <ViewIcon />
                   </IconButton> */}
-                  <IconButton color='warning' onClick={() => handleEdit(user._id)}>
+                  <IconButton color='warning' onClick={() => handleEdit(user.id)}>
                     <EditIcon />
                   </IconButton>
                   <IconButton

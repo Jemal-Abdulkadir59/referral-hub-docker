@@ -33,8 +33,6 @@ app.use(cors(corsOptions));
 //   next();
 // });
 
-
-
 //GLOBAL MIDDLEWARE
 //SET SECURITY HTTP HEADERS
 app.use(helmet());
@@ -43,7 +41,10 @@ app.use(helmet());
 // if (process.env.NODE_ENV === 'development') {
 //   app.use(morgan('dev'));
 // }
-if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'docker') {
+if (
+  process.env.NODE_ENV === 'development' ||
+  process.env.NODE_ENV === 'docker'
+) {
   app.use(morgan('dev'));
 }
 
@@ -85,6 +86,13 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'OK',
+  });
+});
+
 // ROUTE MOUNT
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/patient', patientRouter);
@@ -101,7 +109,7 @@ app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 app.use((err, req, res, next) => {
-  console.error("ERROR 💥:", err);
+  console.error('ERROR 💥:', err);
 
   res.status(err.statusCode || 500).json({
     status: 'error',
@@ -112,7 +120,6 @@ app.use((err, req, res, next) => {
 app.use(globalErrorHandler);
 
 module.exports = app;
-
 
 // app.use((req, res, next) => {
 //   console.log("Incoming:", req.method, req.url);
@@ -128,9 +135,9 @@ module.exports = app;
 
 // 1. CORS Configuration (Keep here)
 // app.use(cors({
-//   // 
-//   origin: ['http://localhost:3000'], 
-//   credentials: true,               
+//   //
+//   origin: ['http://localhost:3000'],
+//   credentials: true,
 //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 //   allowedHeaders: ['Content-Type', 'Authorization'],
 //   // allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'] // Added Cookie header allowance

@@ -49,7 +49,7 @@ const AccountDetails = () => {
   }, [meData])
 
   const handleFormChange = (field, value) => {
-    setFormData({ ...formData, [field]: value, id: meData?._id })
+    setFormData({ ...formData, [field]: value, id: meData?.id })
   }
 
   const handleFileInputChange = file => {

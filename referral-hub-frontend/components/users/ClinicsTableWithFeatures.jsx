@@ -109,7 +109,7 @@ export default function ClinicsTableWithFeatures() {
 
   const handleDelete = () => {
     // setUsers(users.filter(u => u.id !== userToDelete?.id))
-    deleteUsers(userToDelete?._id)
+    deleteUsers(userToDelete?.id)
     setOpenConfirm(false)
     setUserToDelete(null)
   }
@@ -199,7 +199,7 @@ export default function ClinicsTableWithFeatures() {
           </TableHead>
           <TableBody>
             {paginatedUsers.map(user => (
-              <TableRow key={user._id} hover>
+              <TableRow key={user.id} hover>
                 <TableCell>
                   <Avatar src={user.avatar} />
                 </TableCell>
@@ -220,7 +220,7 @@ export default function ClinicsTableWithFeatures() {
                   {/* <IconButton color='primary'>
                     <ViewIcon />
                   </IconButton> */}
-                  <IconButton color='warning' onClick={() => handleEdit(user._id)}>
+                  <IconButton color='warning' onClick={() => handleEdit(user.id)}>
                     <EditIcon />
                   </IconButton>
                   <IconButton
@@ -235,7 +235,7 @@ export default function ClinicsTableWithFeatures() {
                   <OptionMenu
                     iconClassName='text-textPrimary'
                     options={user.status === 'active' ? ['canceled'] : ['active', 'canceled']}
-                    setSelectedStatus={value => handleStatusChange(user._id, value)}
+                    setSelectedStatus={value => handleStatusChange(user.id, value)}
                   />
                 </TableCell>
               </TableRow>

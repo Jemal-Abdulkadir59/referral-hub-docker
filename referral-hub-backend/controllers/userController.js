@@ -1,4 +1,5 @@
-const User = require('../models/userModel');
+// const User = require('../models/userModel');
+const prisma = require('../prismaClient');
 const sharp = require('sharp');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
@@ -66,9 +67,9 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.file) filteredBody.photo = req.file.filename;
 
   //2. update user document
-  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-    new: true,
-    runValidators: true,
+  const updatedUser = await prisma.user.update({
+    where: { id: req.user.id },
+    data: filteredBody,
   });
 
   res.status(200).json({
@@ -80,8 +81,10 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false });
-
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { active: false },
+  });
   res.status(204).json({
     status: 'success',
     data: null,
@@ -95,9 +98,9 @@ exports.createUser = (req, res) => {
   });
 };
 
-exports.getAllUsers = factory.getAll(User);
-exports.getUser = factory.getOne(User);
+exports.getAllUsers = factory.getAll(prisma.user);
+exports.getUser = factory.getOne(prisma.user);
 
 // DO NOT UPDATE PASSWORD WITH THIS UPDATE
-exports.updateUser = factory.updateOne(User);
-exports.deleteUser = factory.deleteOne(User);
+exports.updateUser = factory.updateOne(prisma.user);
+exports.deleteUser = factory.deleteOne(prisma.user);

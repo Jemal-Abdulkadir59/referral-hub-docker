@@ -41,7 +41,7 @@ export default function PatientRecordEditModal({ openEdit, setOpenEdit, patientR
   useEffect(() => {
     if (PatientRecordData) {
       setForm({
-        doctor: PatientRecordData.doctor._id || '',
+        doctor: PatientRecordData.doctor.id || '',
         report: PatientRecordData.report || ''
       })
     }
@@ -97,7 +97,7 @@ export default function PatientRecordEditModal({ openEdit, setOpenEdit, patientR
                 }}
               >
                 {doctorsData?.map(doc => (
-                  <MenuItem key={doc._id} value={doc._id}>
+                  <MenuItem key={doc.id} value={doc.id}>
                     {doc.name}
                   </MenuItem>
                 ))}

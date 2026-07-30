@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  department           String?
+  address              String
+  phone                String    @unique
+  photo                String    @default("default.jpg")
+  role                 Role      @default(user)
+  status               Status    @default(pending)
+  password             String
+  passwordChangedAt    DateTime?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  active               Boolean   @default(true)
+
+  patients      Patient[]
+  referrals     Referral[]
+  nurseRecords  PatientRecord[] @relation("Nurse")
+  doctorRecords PatientRecord[] @relation("Doctor")
+  doctorReports DoctorReport[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  admin
+  user
+  nurse
+  doctor
+  data_clerk
+}
+
+enum Status {
+  pending
+  active
+  canceled
+}
+
+model Patient {
+  id             String  @id @default(uuid())
+  fullName       String  @unique
+  gender         String
+  dateOfBirth    String
+  phone          String  @unique
+  address        String
+  photo          String  @default("default.jpg")
+  slug           String?
+  medicalHistory String?
+
+  clinicId String
+  clinic   User   @relation(fields: [clinicId], references: [id])
+
+  referrals Referral[]
+
+  createdAt DateTime @default(now())
+}
+
+model Referral {
+  id           String   @id @default(uuid())
+  reason       String
+  description  String?
+  status       String   @default("pending")
+  referralDate DateTime @default(now())
+
+  clinicId String
+  clinic   User   @relation(fields: [clinicId], references: [id])
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  patientRecords PatientRecord[]
+}
+
+model PatientRecord {
+  id String @id @default(uuid())
+
+  nurseId String
+  nurse   User   @relation("Nurse", fields: [nurseId], references: [id])
+
+  doctorId String
+  doctor   User   @relation("Doctor", fields: [doctorId], references: [id])
+
+  referralId String
+  referral   Referral @relation(fields: [referralId], references: [id])
+
+  report String?
+
+  createdAt DateTime @default(now())
+
+  doctorReports DoctorReport[]
+
+  @@unique([nurseId, doctorId, referralId])
+}
+
+model DoctorReport {
+  id String @id @default(uuid())
+
+  doctorId String
+  doctor   User   @relation(fields: [doctorId], references: [id])
+
+  patientRecordId String
+  patientRecord   PatientRecord @relation(fields: [patientRecordId], references: [id])
+
+  finalReport            String
+  Diagnosis              String?
+  MedicationsAtDischarge String?
+  FollowUpInstructions   String?
+  Prognosis              String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([doctorId, patientRecordId])
+}

@@ -1,65 +1,57 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+// Load env
+require('dotenv').config({ path: './config.env' }); //aws not working with we will fix it later
 
-// UNCAUGHT EXCEPTION : eg. console.log(x) : ReferenceError x is not defined
+// Prisma
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+// UNCAUGHT EXCEPTION
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! Shutting down...');
   console.log(err.name, err.message);
   process.exit(1);
 });
 
+// App
 const app = require('./app');
 
-// TO CONNECT WITH ATLAS
-// const DB = process.env.DATABASE.replace(
-//   '<PASSWORD>',
-//   process.env.DATABASE_PASSWORD,
-// );
-
-// TO CONNECT WITH LOCAL MONGODB
-// let DB = process.env.DATABASE_LOCAL;
-// if (DB.includes('<PASSWORD>') && process.env.DATABASE_PASSWORD) {
-//   DB = DB.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
-// }
-
-let DB;
-
-if (process.env.NODE_ENV === 'docker') {
-  DB = process.env.DATABASE_DOCKER;
-} else {
-  DB = process.env.DATABASE_LOCAL;
+// ✅ CHECK DATABASE URL (important for Docker & local)
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is not defined');
 }
 
-if (!DB) {
-  throw new Error("Database connection string is not defined");
+// ✅ CONNECT TO DATABASE (Prisma way)
+async function connectDB() {
+  try {
+    await prisma.$connect();
+    console.log('PostgreSQL connected successfully!');
+  } catch (err) {
+    console.log('DB CONNECTION ERROR!');
+    console.log(err.message);
+    process.exit(1);
+  }
 }
-
-// DATABASE CONNECTION
-mongoose.connect(DB).then((con) => {
-  // console.log(con.connections);
-  console.log('DB connection successful!');
-});
-// .catch((err) => console.log('Error!'));
 
 // START SERVER
-// const port = process.env.PORT || 8000;
-// const server = app.listen(port, () => {
-//   console.log(`App running on port ${port}...`);
-// });
-
 const port = process.env.PORT || 8000;
 
-// CHANGE THIS: Add '0.0.0.0' as the host argument
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`App running on port ${port}...`);
-});
+async function startServer() {
+  await connectDB();
 
-// UNHANDLED REJECTION : any other rejection somewhere application
-process.on('unhandledRejection', (err) => {
-  console.log('UNHANDLED REJECTION! Shutting down...');
-  console.log(err.name, err.message);
-  server.close(() => {
-    process.exit(1); // 0 for success and 1 for unhandle
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`App running on port ${port}...`);
   });
-});
+
+  // UNHANDLED REJECTION
+  process.on('unhandledRejection', (err) => {
+    console.log('UNHANDLED REJECTION! Shutting down...');
+    console.log(err); // ✅ prints FULL stack trace
+    console.log(err.name, err.message);
+    server.close(() => {
+      process.exit(1);
+    });
+  });
+}
+
+// RUN
+startServer();

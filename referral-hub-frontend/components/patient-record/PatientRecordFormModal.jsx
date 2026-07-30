@@ -86,7 +86,7 @@ export default function PatientRecordFormModal({ openRecord, setOpenRecord, refe
                   }}
                 >
                   {doctorsData?.map(doc => (
-                    <MenuItem key={doc._id} value={doc._id}>
+                    <MenuItem key={doc.id} value={doc.id}>
                       {doc.name}
                     </MenuItem>
                   ))}

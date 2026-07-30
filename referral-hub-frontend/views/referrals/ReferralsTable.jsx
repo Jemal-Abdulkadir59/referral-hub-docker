@@ -119,7 +119,7 @@ export default function ReferralsTable() {
 
   const handleDelete = () => {
     // setUsers(users.filter(u => u.id !== userToDelete?.id))
-    deleteReferrals(userToDelete?._id)
+    deleteReferrals(userToDelete?.id)
     setOpenConfirm(false)
     setUserToDelete(null)
   }
@@ -197,7 +197,7 @@ export default function ReferralsTable() {
           </TableHead>
           <TableBody>
             {paginatedUsers.map(referral => (
-              <TableRow key={referral._id} hover>
+              <TableRow key={referral.id} hover>
                 <TableCell>
                   <Avatar src={`images/${referral.patient.photo}`} />
                 </TableCell>
