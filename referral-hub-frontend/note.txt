@@ -361,3 +361,20 @@ project-root/
 │   ├── .env.local     # frontend env
 │   ├── .env.example
 │   └── ...
+
+
+-----------------------------------------------------
+ERROR during build in ESLint
+✅ Correct Fix
+
+Update your next.config.mjs like this:
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  basePath: process.env.BASEPATH,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+};
+
+export default nextConfig;

@@ -1,0 +1,236 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/[...not-found]",
+      "regex": "^/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPnotfound": "nxtPnot-found"
+      },
+      "namedRegex": "^/(?<nxtPnotfound>.+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/clinics",
+      "regex": "^/clinics(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/clinics(?:/)?$"
+    },
+    {
+      "page": "/clinics/account-settings",
+      "regex": "^/clinics/account\\-settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/clinics/account\\-settings(?:/)?$"
+    },
+    {
+      "page": "/clinics/referrals",
+      "regex": "^/clinics/referrals(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/clinics/referrals(?:/)?$"
+    },
+    {
+      "page": "/clinics/register-new-patients",
+      "regex": "^/clinics/register\\-new\\-patients(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/clinics/register\\-new\\-patients(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/dashboard/account-settings",
+      "regex": "^/dashboard/account\\-settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/account\\-settings(?:/)?$"
+    },
+    {
+      "page": "/dashboard/doctor-reports",
+      "regex": "^/dashboard/doctor\\-reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/doctor\\-reports(?:/)?$"
+    },
+    {
+      "page": "/dashboard/list-users",
+      "regex": "^/dashboard/list\\-users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/list\\-users(?:/)?$"
+    },
+    {
+      "page": "/dashboard/patient-records",
+      "regex": "^/dashboard/patient\\-records(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/patient\\-records(?:/)?$"
+    },
+    {
+      "page": "/dashboard/patients",
+      "regex": "^/dashboard/patients(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/patients(?:/)?$"
+    },
+    {
+      "page": "/dashboard/referrals",
+      "regex": "^/dashboard/referrals(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/referrals(?:/)?$"
+    },
+    {
+      "page": "/dashboard/register-new-user",
+      "regex": "^/dashboard/register\\-new\\-user(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/register\\-new\\-user(?:/)?$"
+    },
+    {
+      "page": "/data-clerk",
+      "regex": "^/data\\-clerk(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/data\\-clerk(?:/)?$"
+    },
+    {
+      "page": "/data-clerk/account-settings",
+      "regex": "^/data\\-clerk/account\\-settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/data\\-clerk/account\\-settings(?:/)?$"
+    },
+    {
+      "page": "/doctors",
+      "regex": "^/doctors(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/doctors(?:/)?$"
+    },
+    {
+      "page": "/doctors/account-settings",
+      "regex": "^/doctors/account\\-settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/doctors/account\\-settings(?:/)?$"
+    },
+    {
+      "page": "/doctors/doctor-reports",
+      "regex": "^/doctors/doctor\\-reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/doctors/doctor\\-reports(?:/)?$"
+    },
+    {
+      "page": "/error",
+      "regex": "^/error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/error(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/forgot-password",
+      "regex": "^/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/not-active",
+      "regex": "^/not\\-active(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/not\\-active(?:/)?$"
+    },
+    {
+      "page": "/nurse",
+      "regex": "^/nurse(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/nurse(?:/)?$"
+    },
+    {
+      "page": "/nurse/account-settings",
+      "regex": "^/nurse/account\\-settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/nurse/account\\-settings(?:/)?$"
+    },
+    {
+      "page": "/nurse/doctor-reports",
+      "regex": "^/nurse/doctor\\-reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/nurse/doctor\\-reports(?:/)?$"
+    },
+    {
+      "page": "/nurse/patient-records",
+      "regex": "^/nurse/patient\\-records(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/nurse/patient\\-records(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/unauthorized",
+      "regex": "^/unauthorized(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/unauthorized(?:/)?$"
+    },
+    {
+      "page": "/under-maintenance",
+      "regex": "^/under\\-maintenance(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/under\\-maintenance(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

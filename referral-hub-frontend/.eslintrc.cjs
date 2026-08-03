@@ -3,7 +3,7 @@ module.exports = {
   rules: {
     'react/jsx-no-undef': 'error',
     'react/prop-types': 'warn',
-    'jsx-no-undef-href': 'error',
+    // 'jsx-no-undef-href': 'error',
     'jsx-a11y/alt-text': 'off',
     'react/display-name': 'off',
     'react/no-children-prop': 'off',

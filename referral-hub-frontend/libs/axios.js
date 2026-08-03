@@ -1,18 +1,23 @@
 import axios from 'axios'
 
-const isServer = typeof window === 'undefined';
+const isServer = typeof window === 'undefined'
 
 const axiosInstance = axios.create({
   baseURL: isServer
-    ? (`${process.env.NEXT_PUBLIC_SERVER_API_URL}/api/v1` || 'http://backend:8000/api/v1')
-    : (`${process.env.NEXT_PUBLIC_CLIENT_API_URL}/api/v1` || 'http://localhost:8000/api/v1'), 
-  withCredentials: true, // Send cookies across origins
+    ? `${process.env.NEXT_PUBLIC_SERVER_API_URL}/api/v1` || 'http://backend:8000/api/v1'
+    : `${process.env.NEXT_PUBLIC_CLIENT_API_URL}/api/v1` || 'http://localhost:8000/api/v1',
+  withCredentials: true // Send cookies across origins
 })
-console.log("BASE URL:", axiosInstance.defaults.baseURL)
+console.log('BASE URL:', axiosInstance.defaults.baseURL)
 export default axiosInstance
 
-
-
+// improved code
+// const axiosInstance = axios.create({
+//   baseURL: isServer
+//     ? process.env.NEXT_PUBLIC_SERVER_API_URL || 'http://backend:8000/api/v1'
+//     : process.env.NEXT_PUBLIC_CLIENT_API_URL + '/api/v1',
+//   withCredentials: true,
+// });
 
 // // src/lib/axios.js
 // import axios from 'axios'
